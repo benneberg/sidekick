@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sidekick — Din entreprenöriella operating system</title>
+    <meta name="description" content="Sidekick: Ett verktyg för unga entreprenörer att testa idéer och beräkna lönsamhet.">
+    
+    <!-- Tailwind CSS (via CDN for single-file portability) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Configuration for Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9', // Sky blue
+                            600: '#0284c7',
+                            900: '#0c4a6e',
+                        },
+                        accent: {
+                            500: '#f59e0b', // Amber for warnings/actions
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Custom Styles & Animation */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Smooth transitions */
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Hide Scrollbar but keep functionality */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Mobile Navigation Bottom Bar Active State */
+        .nav-item.active {
+            color: #0ea5e9;
+        }
+        .nav-item.active svg {
+            stroke-width: 2.5;
+        }
+
+        /* Card Interactions */
+        .interactive-card {
+            transition: all 0.2s ease;
+        }
+        .interactive-card:active {
+            transform: scale(0.98);
+        }
+
+        /* Modal Overlay */
+        #modal-overlay {
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 px-4 py-3 flex justify-between items-center shadow-sm z-10 shrink-0">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white font-bold">S</div>
+            <h1 class="font-bold text-lg tracking-tight text-slate-800">Sidekick</h1>
+        </div>
+        <div class="flex items-center gap-3">
+            <div id="connection-status" class="flex items-center gap-1 text-xs font-medium text-slate-400">
+                <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                Online
+            </div>
+            <button onclick="app.router.go('settings')" class="p-2 text-slate-500 hover:text-slate-800">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main id="main-content" class="flex-1 overflow-y-auto bg-slate-50 p-4 pb-24 relative no-scrollbar">
+        <!-- Dynamic Content Injected Here -->
+        <div class="flex items-center justify-center h-full text-slate-400">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
+        </div>
+    </main>
+
+    <!-- Mobile Navigation -->
+    <nav class="bg-white border-t border-slate-200 fixed bottom-0 w-full z-20 pb-safe">
+        <div class="flex justify-around items-center h-16">
+            <button onclick="app.router.go('dashboard')" class="nav-item active flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-brand-600 transition-colors" data-target="dashboard">
+                <svg class="mb-1" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                <span class="text-[10px] font-medium">Hem</span>
+            </button>
+            <button onclick="app.router.go('projects')" class="nav-item flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-brand-600 transition-colors" data-target="projects">
+                <svg class="mb-1" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+                <span class="text-[10px] font-medium">Projekt</span>
+            </button>
+            <div class="relative -top-5">
+                <button onclick="app.modals.open('create-project')" class="w-14 h-14 bg-brand-600 rounded-full flex items-center justify-center text-white shadow-lg hover:bg-brand-700 transition-transform active:scale-95">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </button>
+            </div>
+            <button onclick="app.router.go('calculator')" class="nav-item flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-brand-600 transition-colors" data-target="calculator">
+                <svg class="mb-1" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="16" y1="14" x2="16" y2="18"></line><path d="M16 10h.01"></path><path d="M12 10h.01"></path><path d="M8 10h.01"></path><path d="M12 14h.01"></path><path d="M8 14h.01"></path><path d="M12 18h.01"></path><path d="M8 18h.01"></path></svg>
+                <span class="text-[10px] font-medium">Kalkyl</span>
+            </button>
+            <button onclick="app.router.go('notes')" class="nav-item flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-brand-600 transition-colors" data-target="notes">
+                <svg class="mb-1" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <span class="text-[10px] font-medium">Anteckningar</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Modal Overlay -->
+    <div id="modal-overlay" class="fixed inset-0 bg-slate-900/50 hidden z-50 flex items-end sm:items-center justify-center transition-opacity">
+        <!-- Modal Content Container -->
+        <div id="modal-container" class="bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl p-6 shadow-2xl transform translate-y-full transition-transform duration-300 max-h-[90vh] overflow-y-auto">
+            <!-- Dynamic Modal Content -->
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-full shadow-lg text-sm font-medium opacity-0 pointer-events-none transition-opacity z-50 flex items-center gap-2">
+        <span id="toast-icon"></span>
+        <span id="toast-message">Notification</span>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        /**
+         * SIDEKICK APP ARCHITECTURE
+         * 1. Utils: Helpers
+         * 2. DB: IndexedDB Wrapper
+         * 3. State: App State
+         * 4. Services: Business Logic (Calc, Recommendations)
+         * 5. UI: View Renderers
+         * 6. Router: Navigation
+         * 7. App: Initialization
+         */
+
+        // --- 1. UTILS ---
+        const Utils = {
+            id: () => crypto.randomUUID(),
+            now: () => new Date().toISOString(),
+            formatMoney: (amount) => {
+                return new Intl.NumberFormat('sv-SE', { style: 'currency', currency: 'SEK', maximumFractionDigits: 0 }).format(amount);
+            },
+            formatDate: (isoString) => {
+                if(!isoString) return '';
+                const d = new Date(isoString);
+                return d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' });
+            },
+            debounce: (func, wait) => {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+        };
+
+        // --- 2. DATABASE (IndexedDB) ---
+        class DB {
+            constructor() {
+                this.dbName = 'SidekickDB';
+                this.version = 1;
+                this.db = null;
+            }
+
+            async connect() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.dbName, this.version);
+
+                    request.onupgradeneeded = (e) => {
+                        const db = e.target.result;
+                        // Create Stores
+                        if (!db.objectStoreNames.contains('projects')) db.createObjectStore('projects', { keyPath: 'id' });
+                        if (!db.objectStoreNames.contains('tasks')) db.createObjectStore('tasks', { keyPath: 'id' });
+                        if (!db.objectStoreNames.contains('notes')) db.createObjectStore('notes', { keyPath: 'id' });
+                        // Indexes for efficient queries
+                        if (!db.objectStoreNames.contains('products')) db.createObjectStore('products', { keyPath: 'id' });
+                    };
+
+                    request.onsuccess = (e) => {
+                        this.db = e.target.result;
+                        resolve(this.db);
+                    };
+
+                    request.onerror = (e) => reject(e);
+                });
+            }
+
+            async getAll(storeName) {
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction(storeName, 'readonly');
+                    const store = tx.objectStore(storeName);
+                    const request = store.getAll();
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            async add(storeName, item) {
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction(storeName, 'readwrite');
+                    const store = tx.objectStore(storeName);
+                    item.createdAt = item.createdAt || Utils.now();
+                    item.updatedAt = Utils.now();
+                    const request = store.add(item);
+                    request.onsuccess = () => resolve(item);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            async update(storeName, item) {
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction(storeName, 'readwrite');
+                    const store = tx.objectStore(storeName);
+                    item.updatedAt = Utils.now();
+                    const request = store.put(item);
+                    request.onsuccess = () => resolve(item);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            async delete(storeName, id) {
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction(storeName, 'readwrite');
+                    const store = tx.objectStore(storeName);
+                    const request = store.delete(id);
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            }
+        }
+
+        const db = new DB();
+
+        // --- 3. SERVICES ---
+
+        const CalculationService = {
+            calculate: (inputs) => {
+                const { salePrice, purchasePrice, shipping, adCost, paymentFee, vatRate = 0.25 } = inputs;
+                
+                // Convert to numbers, handle bad input
+                const price = parseFloat(salePrice) || 0;
+                const cost = parseFloat(purchasePrice) || 0;
+                const ship = parseFloat(shipping) || 0;
+                const ads = parseFloat(adCost) || 0;
+                const fee = parseFloat(paymentFee) || 0;
+
+                const totalCost = cost + ship + ads + fee;
+                const revenue = price;
+                const grossProfit = revenue - totalCost;
+                
+                // VAT logic (Assuming price includes VAT)
+                const priceExVat = price / (1 + vatRate);
+                const vatAmount = price - priceExVat;
+                
+                // Contribution Margin (Price excluding VAT - Total Cost)
+                const contribution = priceExVat - totalCost;
+                const margin = price > 0 ? (contribution / price) * 100 : 0;
+
+                const breakEvenUnits = totalCost > 0 ? Math.ceil(totalCost / (priceExVat - cost)) : 0;
+
+                return {
+                    revenue,
+                    totalCost,
+                    grossProfit,
+                    vatAmount,
+                    contribution,
+                    margin: parseFloat(margin.toFixed(1)),
+                    breakEvenUnits,
+                    isProfitable: contribution > 0
+                };
+            }
+        };
+
+        const RecommendationEngine = {
+            async generate(projects, tasks) {
+                const recs = [];
+                
+                // 1. No projects
+                if (projects.length === 0) {
+                    recs.push({
+                        id: 'rec-start', type: 'action', priority: 100, title: 'Skapa ditt första projekt', reason: 'Du har inga aktiva projekt än.', icon: '🚀', action: () => app.modals.open('create-project')
+                    });
+                    return recs;
+                }
+
+                // 2. Check incomplete tasks
+                const pendingTasks = tasks.filter(t => t.status !== 'done');
+                if (pendingTasks.length > 0) {
+                    const nextTask = pendingTasks[0];
+                    recs.push({
+                        id: 'rec-task', type: 'action', priority: 80, title: nextTask.title, reason: 'Nästa uppgift i ' + (projects.find(p=>p.id===nextTask.projectId)?.name || 'projekt'), icon: '📌', action: () => { /* Navigate to task */ }
+                    });
+                }
+
+                // 3. Check projects without products
+                const projectsWithoutProducts = projects.filter(p => !p.productAdded);
+                if (projectsWithoutProducts.length > 0) {
+                    recs.push({
+                        id: 'rec-prod', type: 'opportunity', priority: 60, title: 'Lägg till en produkt', reason: 'Du behöver en produkt för att testa din idé.', icon: '📦', action: () => app.router.go('calculator')
+                    });
+                }
+
+                // 4. Check financials
+                const projectsWithoutCalc = projects.filter(p => !p.hasFinancials);
+                if (projectsWithoutCalc.length > 0) {
+                    recs.push({
+                        id: 'rec-calc', type: 'warning', priority: 70, title: 'Beräkna lönsamhet', reason: 'Du har inte kollat om idén faktiskt är lönsam.', icon: '💰', action: () => app.router.go('calculator')
+                    });
+                }
+
+                // 5. Education Tip
+                if (Math.random() > 0.7) {
+                    recs.push({
+                        id: 'rec-tip', type: 'learning', priority: 20, title: 'Snabbtips: Testa litet', reason: 'Lägg inte stora pengar på varor innan du sålt ett exemplar.', icon: '💡', action: null
+                    });
+                }
+
+                return recs.sort((a, b) => b.priority - a.priority);
+            }
+        };
+
+        const ExportService = {
+            async exportData() {
+                try {
+                    const data = {
+                        projects: await db.getAll('projects'),
+                        tasks: await db.getAll('tasks'),
+                        notes: await db.getAll('notes'),
+                        exportedAt: new Date().toISOString()
+                    };
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `sidekick-backup-${Utils.formatDate(new Date())}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    return true;
+                } catch (e) {
+                    console.error(e);
+                    return false;
+                }
+            },
+            
+            async importData(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        try {
+                            const data = JSON.parse(e.target.result);
+                            if(data.projects) {
+                                for(const p of data.projects) await db.add('projects', p);
+                            }
+                            if(data.tasks) {
+                                for(const t of data.tasks) await db.add('tasks', t);
+                            }
+                            if(data.notes) {
+                                for(const n of data.notes) await db.add('notes', n);
+                            }
+                            resolve(true);
+                        } catch (err) {
+                            reject(err);
+                        }
+                    };
+                    reader.readAsText(file);
+                });
+            }
+        };
+
+        // --- 4. UI COMPONENTS & VIEWS ---
+
+        const Icons = {
+            check: `<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`,
+            trash: `<svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>`,
+            arrowRight: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>`,
+            plus: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>`
+        };
+
+        const Views = {
+            dashboard: async () => {
+                const projects = await db.getAll('projects');
+                const tasks = await db.getAll('tasks');
+                const recs = await RecommendationEngine.generate(projects, tasks);
+                
+                const activeProjects = projects.filter(p => p.stage !== 'completed' && p.stage !== 'failed');
+
+                let html = `
+                    <div class="max-w-2xl mx-auto space-y-6 fade-in">
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <h2 class="text-2xl font-bold text-slate-800">Hej, Entreprenör! 👋</h2>
+                                <p class="text-slate-500 text-sm">Låt oss bygga något bra idag.</p>
+                            </div>
+                        </div>
+
+                        <!-- DO THIS NEXT -->
+                        <div class="bg-brand-900 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden">
+                            <div class="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-brand-500 rounded-full opacity-20 blur-xl"></div>
+                            <div class="relative z-10">
+                                <h3 class="text-xs font-bold uppercase tracking-wider text-brand-100 mb-1">Gör detta nu</h3>
+                                ${recs.length > 0 ? `
+                                    <div class="space-y-3">
+                                        ${recs.slice(0, 2).map(r => `
+                                            <div onclick="${r.action ? `app.modals.close(); (${r.action.toString()})()` : ''}" class="bg-white/10 backdrop-blur-sm p-3 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-white/20 transition-colors">
+                                                <span class="text-2xl">${r.icon}</span>
+                                                <div class="flex-1">
+                                                    <div class="font-semibold">${r.title}</div>
+                                                    <div class="text-xs text-brand-100">${r.reason}</div>
+                                                </div>
+                                                ${Icons.arrowRight}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : '<p class="text-brand-100">Allt ser lugnt ut just nu.</p>'}
+                            </div>
+                        </div>
+
+                        <!-- ACTIVE PROJECTS -->
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <h3 class="font-bold text-slate-800">Mina Projekt (${activeProjects.length})</h3>
+                                <button onclick="app.router.go('projects')" class="text-brand-600 text-sm font-medium">Se alla</button>
+                            </div>
+                            <div class="space-y-3">
+                                ${activeProjects.length === 0 ? `
+                                    <div class="bg-white p-6 rounded-xl border border-dashed border-slate-300 text-center">
+                                        <p class="text-slate-400 mb-2">Inga aktiva projekt</p>
+                                        <button onclick="app.modals.open('create-project')" class="text-brand-600 font-medium hover:underline">+ Skapa nytt</button>
+                                    </div>
+                                ` : activeProjects.slice(0, 3).map(p => `
+                                    <div onclick="app.router.go('project-detail', '${p.id}')" class="interactive-card bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center cursor-pointer">
+                                        <div>
+                                            <div class="font-semibold text-slate-800">${p.name}</div>
+                                            <div class="text-xs text-slate-500 mt-1 uppercase tracking-wide font-medium">${app.utils.translateStage(p.stage)}</div>
+                                        </div>
+                                        <div class="h-2 w-2 rounded-full ${p.stage === 'launch' ? 'bg-green-500' : 'bg-amber-500'}"></div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- QUICK STATS -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                                <div class="text-xs text-slate-400 uppercase font-bold">Pågående uppgifter</div>
+                                <div class="text-2xl font-bold text-slate-800 mt-1">${tasks.filter(t => t.status !== 'done').length}</div>
+                            </div>
+                             <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                                <div class="text-xs text-slate-400 uppercase font-bold">Idéer testade</div>
+                                <div class="text-2xl font-bold text-slate-800 mt-1">${projects.filter(p => p.stage === 'completed' || p.stage === 'failed').length}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return html;
+            },
+
+            projects: async () => {
+                const projects = await db.getAll('projects');
+                
+                let html = `
+                    <div class="max-w-2xl mx-auto fade-in">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold text-slate-800">Projekt</h2>
+                            <button onclick="app.modals.open('create-project')" class="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-brand-700 flex items-center gap-2">
+                                ${Icons.plus} Nytt
+                            </button>
+                        </div>
+
+                        <div class="space-y-4">
+                            ${projects.length === 0 ? `
+                                <div class="text-center py-10 opacity-50">
+                                    <svg class="w-16 h-16 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
+                                    <p>Dina idéer visas här.</p>
+                                </div>
+                            ` : projects.map(p => `
+                                <div onclick="app.router.go('project-detail', '${p.id}')" class="interactive-card bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h3 class="font-bold text-lg text-slate-800">${p.name}</h3>
+                                        <span class="px-2 py-1 bg-slate-100 text-slate-600 text-xs font-semibold rounded-md uppercase">${app.utils.translateStage(p.stage)}</span>
+                                    </div>
+                                    <p class="text-slate-500 text-sm mb-3 line-clamp-2">${p.description || 'Ingen beskrivning.'}</p>
+                                    <div class="text-xs text-slate-400">Skapad ${Utils.formatDate(p.createdAt)}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                return html;
+            },
+
+            projectDetail: async (params) => {
+                const project = await new Promise(r => {
+                    const tx = db.db.transaction('projects', 'readonly');
+                    tx.objectStore('projects').get(params.id).onsuccess = e => r(e.target.result);
+                });
+
+                if (!project) return `<div class="p-4">Projekt hittades inte.</div>`;
+
+                // Get related data
+                const allTasks = await db.getAll('tasks');
+                const projectTasks = allTasks.filter(t => t.projectId === project.id);
+                const allNotes = await db.getAll('notes');
+                const projectNotes = allNotes.filter(n => n.projectId === project.id);
+
+                return `
+                    <div class="max-w-2xl mx-auto fade-in pb-20">
+                        <!-- Header -->
+                        <div class="flex items-center gap-3 mb-6">
+                            <button onclick="app.router.go('projects')" class="p-2 -ml-2 bg-white rounded-full border border-slate-200 shadow-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                            </button>
+                            <h2 class="text-xl font-bold flex-1 pr-4 truncate">${project.name}</h2>
+                            <button onclick="app.modals.open('edit-project', '${project.id}')" class="text-slate-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                        </div>
+
+                        <!-- Status Banner -->
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-6 flex justify-between items-center">
+                            <div>
+                                <div class="text-xs font-bold text-slate-400 uppercase">Status</div>
+                                <div class="font-medium text-slate-800 flex items-center gap-2">
+                                    ${app.utils.translateStage(project.stage)}
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs font-bold text-slate-400 uppercase">Framsteg</div>
+                                <div class="font-medium text-brand-600">${Math.round((projectTasks.filter(t=>t.status==='done').length / (projectTasks.length||1)) * 100)}%</div>
+                            </div>
+                        </div>
+
+                        <!-- Actions Grid -->
+                        <div class="grid grid-cols-2 gap-3 mb-6">
+                            <button onclick="app.modals.open('add-task', '${project.id}')" class="bg-brand-50 text-brand-700 p-3 rounded-xl flex items-center gap-3 font-medium hover:bg-brand-100">
+                                <span class="bg-brand-200 p-1.5 rounded-md text-brand-800">📝</span> Ny uppgift
+                            </button>
+                            <button onclick="app.modals.open('add-note', '${project.id}')" class="bg-purple-50 text-purple-700 p-3 rounded-xl flex items-center gap-3 font-medium hover:bg-purple-100">
+                                <span class="bg-purple-200 p-1.5 rounded-md text-purple-800">💡</span> Forskning
+                            </button>
+                            <button onclick="app.router.go('calculator', {projectId: '${project.id}'})" class="bg-green-50 text-green-700 p-3 rounded-xl flex items-center gap-3 font-medium hover:bg-green-100">
+                                <span class="bg-green-200 p-1.5 rounded-md text-green-800">🧮</span> Kalkylator
+                            </button>
+                             <button onclick="app.modals.open('add-supplier', '${project.id}')" class="bg-orange-50 text-orange-700 p-3 rounded-xl flex items-center gap-3 font-medium hover:bg-orange-100">
+                                <span class="bg-orange-200 p-1.5 rounded-md text-orange-800">🏭</span> Leverantör
+                            </button>
+                        </div>
+
+                        <!-- Sections -->
+                        <div class="space-y-6">
+                            <!-- Tasks -->
+                            <section>
+                                <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                    Uppgifter (${projectTasks.filter(t => t.status !== 'done').length}) 
+                                </h3>
+                                ${projectTasks.length === 0 ? '<p class="text-sm text-slate-400">Inga uppgifter än.</p>' : ''}
+                                <div class="space-y-2">
+                                    ${projectTasks.map(t => `
+                                        <div class="bg-white p-3 rounded-lg border border-slate-200 flex items-center gap-3 group">
+                                            <button onclick="app.actions.toggleTask('${t.id}', '${t.status}')" class="flex-shrink-0 w-5 h-5 rounded border ${t.status === 'done' ? 'bg-brand-500 border-brand-500' : 'border-slate-300'} flex items-center justify-center text-white">
+                                                ${t.status === 'done' ? Icons.check : ''}
+                                            </button>
+                                            <span class="${t.status === 'done' ? 'line-through text-slate-400' : 'text-slate-700'} flex-1 text-sm">${t.title}</span>
+                                            <button onclick="app.actions.deleteItem('tasks', '${t.id}')" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-500 transition-opacity">
+                                                ${Icons.trash}
+                                            </button>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </section>
+
+                             <!-- Notes -->
+                            <section>
+                                <h3 class="font-bold text-slate-800 mb-3">Anteckningar</h3>
+                                <div class="grid gap-2">
+                                    ${projectNotes.map(n => `
+                                        <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-100 text-sm text-slate-700 relative group">
+                                            <div class="font-semibold text-yellow-800 mb-1">${n.title || 'Anteckning'}</div>
+                                            <p>${n.content}</p>
+                                            <button onclick="app.actions.deleteItem('notes', '${n.id}')" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-500">
+                                                ${Icons.trash}
+                                            </button>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                `;
+            },
+
+            calculator: async (params = {}) => {
+                const projectId = params.projectId;
+                let projects = [];
+                if(projectId) {
+                    projects = await db.getAll('projects');
+                }
+
+                // State for calc inputs (default values)
+                const inputs = window.calcState || {
+                    salePrice: 299,
+                    purchasePrice: 80,
+                    shipping: 35,
+                    adCost: 40,
+                    paymentFee: 8,
+                    vatRate: 0.25
+                };
+                const result = CalculationService.calculate(inputs);
+
+                return `
+                    <div class="max-w-2xl mx-auto fade-in pb-20">
+                         <div class="flex items-center gap-3 mb-6">
+                            ${projectId ? `<button onclick="app.router.go('project-detail', '${projectId}')" class="p-2 -ml-2 bg-white rounded-full border border-slate-200 shadow-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button>` : ''}
+                            <h2 class="text-2xl font-bold">Vinstkalkyl</h2>
+                        </div>
+
+                        <!-- Inputs -->
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-4 space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Försäljningspris (inkl. moms)</label>
+                                    <input type="number" value="${inputs.salePrice}" oninput="app.ui.updateCalc('salePrice', this.value)" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg font-bold text-slate-800 focus:ring-2 focus:ring-brand-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Inköpspris</label>
+                                    <input type="number" value="${inputs.purchasePrice}" oninput="app.ui.updateCalc('purchasePrice', this.value)" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg font-bold text-slate-800 focus:ring-2 focus:ring-brand-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Frakt (kund)</label>
+                                    <input type="number" value="${inputs.shipping}" oninput="app.ui.updateCalc('shipping', this.value)" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg font-bold text-slate-800 focus:ring-2 focus:ring-brand-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Annonsering (est.)</label>
+                                    <input type="number" value="${inputs.adCost}" oninput="app.ui.updateCalc('adCost', this.value)" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg font-bold text-amber-600 focus:ring-2 focus:ring-amber-500 outline-none border-amber-100">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Betalningsavgift</label>
+                                    <input type="number" value="${inputs.paymentFee}" oninput="app.ui.updateCalc('paymentFee', this.value)" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg font-bold text-slate-800 focus:ring-2 focus:ring-brand-500 outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Results -->
+                        <div class="bg-slate-800 rounded-xl shadow-lg p-6 text-white mb-4 relative overflow-hidden">
+                             <div class="flex justify-between items-start mb-6">
+                                <div>
+                                    <div class="text-slate-400 text-sm mb-1">Netto vinst per försäljning</div>
+                                    <div class="text-4xl font-bold ${result.contribution > 0 ? 'text-green-400' : 'text-red-400'}">
+                                        ${Utils.formatMoney(result.contribution)}
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-slate-400 text-sm mb-1">Marginal</div>
+                                    <div class="text-2xl font-bold">${result.margin}%</div>
+                                </div>
+                             </div>
+                             
+                             <div class="space-y-2 text-sm border-t border-slate-600 pt-4">
+                                <div class="flex justify-between">
+                                    <span class="text-slate-300">Intäkt (exkl. moms)</span>
+                                    <span class="font-medium">${Utils.formatMoney(result.revenue - result.vatAmount)}</span>
+                                </div>
+                                <div class="flex justify-between text-red-300">
+                                    <span>Total kostnad</span>
+                                    <span class="font-medium">-${Utils.formatMoney(result.totalCost)}</span>
+                                </div>
+                                <div class="flex justify-between text-slate-400 mt-2 pt-2 border-t border-slate-700 text-xs">
+                                    <span>Moms (betalas till staten)</span>
+                                    <span>-${Utils.formatMoney(result.vatAmount)}</span>
+                                </div>
+                             </div>
+                        </div>
+
+                        <!-- Reality Check -->
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                            <h4 class="font-bold text-slate-800 mb-2 flex items-center gap-2">
+                                ⚠️ Reality Check
+                            </h4>
+                            <ul class="space-y-2 text-sm text-slate-600">
+                                ${result.contribution < 0 ? `<li class="text-red-600 font-medium">Du förlorar pengar på varje försäljning just nu.</li>` : `<li class="text-green-600 font-medium">Grattis, positivt kassaflöde!</li>`}
+                                <li>• Du måste sälja <strong>${result.breakEvenUnits}</strong> st för att gå plus på marknadsföringskostnaden (om du betalar allt i förväg).</li>
+                                <li>• Glöm inte returer och kundsupport.</li>
+                                ${inputs.adCost > 50 ? `<li>• Din annonskostnad är hög. Kan du optimera annonseringen?</li>` : ''}
+                            </ul>
+                        </div>
+
+                        ${projectId ? `
+                        <div class="mt-4">
+                            <button onclick="app.actions.saveCalculation('${projectId}')" class="w-full bg-brand-600 text-white py-3 rounded-xl font-bold hover:bg-brand-700 shadow-md">Spara kalkyl till projekt</button>
+                        </div>` : ''}
+                    </div>
+                `;
+            },
+
+            notes: async () => {
+                const notes = await db.getAll('notes');
+                const projects = await db.getProjectsWithMapping ? (await db.getAll('projects')) : [];
+
+                // Helper to get project name
+                const getProjectName = (id) => {
+                    const p = projects.find(x => x.id === id);
+                    return p ? p.name : 'Allmänt';
+                };
+
+                return `
+                    <div class="max-w-2xl mx-auto fade-in pb-20">
+                         <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold">Anteckningar</h2>
+                            <button onclick="app.modals.open('add-note')" class="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-brand-700 flex items-center gap-2">
+                                ${Icons.plus} Ny
+                            </button>
+                        </div>
+
+                        <div class="grid gap-3">
+                            ${notes.map(n => `
+                                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer" onclick="app.modals.open('edit-note', '${n.id}')">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <span class="text-xs font-bold uppercase text-brand-600 bg-brand-50 px-2 py-1 rounded">${getProjectName(n.projectId)}</span>
+                                        <span class="text-xs text-slate-400">${Utils.formatDate(n.createdAt)}</span>
+                                    </div>
+                                    <h3 class="font-bold text-slate-800 mb-1">${n.title || 'Utan titel'}</h3>
+                                    <p class="text-slate-600 text-sm line-clamp-2">${n.content}</p>
+                                </div>
+                            `).join('')}
+                             ${notes.length === 0 ? `<div class="text-center p-8 text-slate-400">Inga anteckningar än.</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            },
+            
+            settings: async () => {
+                return `
+                    <div class="max-w-2xl mx-auto fade-in pb-20">
+                        <h2 class="text-2xl font-bold mb-6">Inställningar</h2>
+                        
+                        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                            <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+                                <div>
+                                    <h3 class="font-bold text-slate-800">Exportera data</h3>
+                                    <p class="text-xs text-slate-500">Ladda ner alla dina projekt och anteckningar.</p>
+                                </div>
+                                <button onclick="app.actions.exportData()" class="text-brand-600 font-medium text-sm">Hämta JSON</button>
+                            </div>
+                            
+                            <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+                                <div>
+                                    <h3 class="font-bold text-slate-800">Importera data</h3>
+                                    <p class="text-xs text-slate-500">Återställ från en säkerhetskopia.</p>
+                                </div>
+                                <label class="text-brand-600 font-medium text-sm cursor-pointer">
+                                    Ladda upp
+                                    <input type="file" class="hidden" accept=".json" onchange="app.actions.importData(this)">
+                                </label>
+                            </div>
+
+                            <div class="p-4 flex items-center justify-between">
+                                <div>
+                                    <h3 class="font-bold text-slate-800">Nollställ allt</h3>
+                                    <p class="text-xs text-slate-500">Raderar all data permanent.</p>
+                                </div>
+                                <button onclick="if(confirm('Är du säker? Detta går inte att ångra.')) { indexedDB.deleteDatabase('SidekickDB'); location.reload(); }" class="text-red-500 font-medium text-sm">Radera</button>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8 text-center text-xs text-slate-400">
+                            Version 1.0 (Dev Build)<br>
+                            Lokal-först PWA
+                        </div>
+                    </div>
+                `;
+            }
+        };
+
+        // --- 5. MODALS ---
+        const Modals = {
+            current: null,
+            
+            open: (type, id = null) => {
+                const overlay = document.getElementById('modal-overlay');
+                const container = document.getElementById('modal-container');
+                
+                overlay.classList.remove('hidden');
+                // Trigger animation
+                requestAnimationFrame(() => {
+                    container.classList.remove('translate-y-full');
+                });
+
+                let content = '';
+                
+                if (type === 'create-project') {
+                    content = `
+                        <h3 class="text-xl font-bold mb-4">Nytt Projekt</h3>
+                        <form onsubmit="app.actions.createProject(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Projektnamn</label>
+                                <input name="name" required type="text" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" placeholder="T.ex. NordicCase">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Affärsidé</label>
+                                <select name="model" class="w-full p-3 border border-slate-300 rounded-lg bg-white">
+                                    <option value="dropshipping">Dropshipping</option>
+                                    <option value="printondemand">Print-on-Demand</option>
+                                    <option value="service">Tjänst</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Beskrivning</label>
+                                <textarea name="description" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-brand-600 text-white font-bold py-3 rounded-xl hover:bg-brand-700">Skapa Projekt</button>
+                            <button type="button" onclick="app.modals.close()" class="w-full text-slate-500 py-2 text-sm">Avbryt</button>
+                        </form>
+                    `;
+                } else if (type === 'add-task') {
+                    content = `
+                        <h3 class="text-xl font-bold mb-4">Ny Uppgift</h3>
+                        <form onsubmit="app.actions.addTask(event, '${id}')" class="space-y-4">
+                            <input type="hidden" name="projectId" value="${id}">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Vad ska göras?</label>
+                                <input name="title" required type="text" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" placeholder="T.ex. Hitta 3 leverantörer">
+                            </div>
+                             <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Prioritet</label>
+                                <select name="priority" class="w-full p-3 border border-slate-300 rounded-lg bg-white">
+                                    <option value="high">Hög</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="low">Låg</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="w-full bg-brand-600 text-white font-bold py-3 rounded-xl hover:bg-brand-700">Lägg till</button>
+                             <button type="button" onclick="app.modals.close()" class="w-full text-slate-500 py-2 text-sm">Avbryt</button>
+                        </form>
+                    `;
+                } else if (type === 'add-note') {
+                     // If id is provided (projectId), use it. Otherwise show selector.
+                     content = `
+                        <h3 class="text-xl font-bold mb-4">Ny Anteckning</h3>
+                        <form onsubmit="app.actions.addNote(event, '${id || ''}')" class="space-y-4">
+                             ${id ? `<input type="hidden" name="projectId" value="${id}">` : `
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Projekt</label>
+                                    <select name="projectId" id="note-project-select" class="w-full p-3 border border-slate-300 rounded-lg bg-white">
+                                        <option value="">Allmän</option>
+                                        <!-- Populated by JS -->
+                                    </select>
+                                </div>
+                             `}
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Titel</label>
+                                <input name="title" type="text" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Innehåll</label>
+                                <textarea name="content" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" rows="4" placeholder="Dina tankar..."></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-brand-600 text-white font-bold py-3 rounded-xl hover:bg-brand-700">Spara</button>
+                             <button type="button" onclick="app.modals.close()" class="w-full text-slate-500 py-2 text-sm">Avbryt</button>
+                        </form>
+                    `;
+                    // Populate projects if needed
+                    if(!id) {
+                         setTimeout(async () => {
+                            const projects = await db.getAll('projects');
+                            const select = document.getElementById('note-project-select');
+                            if(select) {
+                                projects.forEach(p => {
+                                    const opt = document.createElement('option');
+                                    opt.value = p.id;
+                                    opt.textContent = p.name;
+                                    select.appendChild(opt);
+                                });
+                            }
+                         }, 50);
+                    }
+                }
+
+                container.innerHTML = content;
+            },
+
+            close: () => {
+                const overlay = document.getElementById('modal-overlay');
+                const container = document.getElementById('modal-container');
+                container.classList.add('translate-y-full');
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    container.innerHTML = '';
+                }, 300);
+            }
+        };
+
+        // --- 6. ACTIONS & UTILS ---
+
+        const app = {
+            state: {
+                currentView: 'dashboard'
+            },
+            utils: {
+                translateStage: (stage) => {
+                    const map = {
+                        'idea': 'Idé',
+                        'research': 'Forskning',
+                        'validation': 'Validering',
+                        'test': 'Test',
+                        'launch': 'Lansering',
+                        'active': 'Aktiv',
+                        'paused': 'Pausad',
+                        'failed': 'Avslutad (Misslyckad)',
+                        'completed': 'Klar'
+                    };
+                    return map[stage] || stage;
+                }
+            },
+            ui: {
+                showToast: (msg, type = 'success') => {
+                    const el = document.getElementById('toast');
+                    const msgEl = document.getElementById('toast-message');
+                    const iconEl = document.getElementById('toast-icon');
+                    
+                    msgEl.textContent = msg;
+                    iconEl.innerHTML = type === 'success' ? '✅' : '⚠️';
+                    el.classList.remove('opacity-0', 'translate-y-4');
+                    setTimeout(() => el.classList.add('opacity-0', 'translate-y-4'), 3000);
+                },
+                updateCalc: (key, value) => {
+                    if(!window.calcState) window.calcState = {};
+                    window.calcState[key] = parseFloat(value);
+                    // Re-render only calculator part ideally, but for simplicity re-route
+                    // To avoid losing focus, we won't full re-route. We'll update results directly.
+                    const result = CalculationService.calculate(window.calcState);
+                    
+                    // Update DOM elements directly for performance
+                    const contribEl = document.querySelector('.text-4xl'); // A bit hacky but works for single file
+                    if(contribEl) {
+                        contribEl.textContent = Utils.formatMoney(result.contribution);
+                        contribEl.className = `text-4xl font-bold ${result.contribution > 0 ? 'text-green-400' : 'text-red-400'}`;
+                    }
+                    const marginEl = document.querySelectorAll('.text-2xl')[0];
+                    if(marginEl) marginEl.textContent = result.margin + '%';
+                    
+                    const breakEvenEl = document.querySelector('strong');
+                    if(breakEvenEl && breakEvenEl.textContent.includes('st')) {
+                         breakEvenEl.textContent = result.breakEvenUnits;
+                    }
+                }
+            },
+            actions: {
+                createProject: async (e) => {
+                    e.preventDefault();
+                    const form = e.target;
+                    const project = {
+                        id: Utils.id(),
+                        name: form.name.value,
+                        description: form.description.value,
+                        businessModel: form.model.value,
+                        stage: 'idea',
+                        createdAt: Utils.now()
+                    };
+                    await db.add('projects', project);
+                    app.modals.close();
+                    app.ui.showToast('Projekt skapat!');
+                    app.router.go('project-detail', project.id);
+                },
+                addTask: async (e, projectId) => {
+                    e.preventDefault();
+                    const form = e.target;
+                    const task = {
+                        id: Utils.id(),
+                        projectId: projectId,
+                        title: form.title.value,
+                        status: 'todo',
+                        priority: form.priority.value
+                    };
+                    await db.add('tasks', task);
+                    app.modals.close();
+                    app.ui.showToast('Uppgift tillagd');
+                    app.router.refresh(); // Reload current view
+                },
+                toggleTask: async (taskId, currentStatus) => {
+                    const newStatus = currentStatus === 'done' ? 'todo' : 'done';
+                    const tx = db.db.transaction('tasks', 'readwrite');
+                    const store = tx.objectStore('tasks');
+                    const req = store.get(taskId);
+                    req.onsuccess = () => {
+                        const task = req.result;
+                        task.status = newStatus;
+                        if(newStatus === 'done') task.completedAt = Utils.now();
+                        store.put(task);
+                        app.router.refresh();
+                    };
+                },
+                addNote: async (e, projectId) => {
+                    e.preventDefault();
+                    const form = e.target;
+                    const note = {
+                        id: Utils.id(),
+                        projectId: form.projectId.value || projectId || null,
+                        title: form.title.value,
+                        content: form.content.value,
+                        type: 'note'
+                    };
+                    await db.add('notes', note);
+                    app.modals.close();
+                    app.ui.showToast('Anteckning sparad');
+                    if(app.state.currentView === 'project-detail') {
+                        app.router.refresh();
+                    } else {
+                        app.router.go('notes');
+                    }
+                },
+                deleteItem: async (store, id) => {
+                    if(confirm('Ta bort det här?')) {
+                        await db.delete(store, id);
+                        app.router.refresh();
+                        app.ui.showToast('Raderad', 'info');
+                    }
+                },
+                saveCalculation: async (projectId) => {
+                    const tx = db.db.transaction('projects', 'readwrite');
+                    const store = tx.objectStore('projects');
+                    const req = store.get(projectId);
+                    req.onsuccess = () => {
+                        const p = req.result;
+                        p.hasFinancials = true;
+                        store.put(p);
+                        app.ui.showToast('Kalkyl kopplad till projekt');
+                        setTimeout(() => app.router.go('project-detail', projectId), 1000);
+                    }
+                },
+                exportData: async () => {
+                    const success = await ExportService.exportData();
+                    if(success) app.ui.showToast('Data nedladdad');
+                },
+                importData: async (input) => {
+                    if(input.files.length > 0) {
+                        try {
+                            await ExportService.importData(input.files[0]);
+                            app.ui.showToast('Data importerad');
+                            setTimeout(() => location.reload(), 1000);
+                        } catch(e) {
+                            alert('Kunde inte läsa filen.');
+                        }
+                    }
+                }
+            },
+            router: {
+                go: async (viewName, params = {}) => {
+                    app.state.currentView = viewName;
+                    app.state.params = params;
+                    
+                    // Update Nav Visuals
+                    document.querySelectorAll('.nav-item').forEach(el => {
+                        if(el.dataset.target === viewName) el.classList.add('active', 'text-brand-600');
+                        else el.classList.remove('active', 'text-brand-600');
+                    });
+
+                    // Render
+                    const main = document.getElementById('main-content');
+                    main.innerHTML = '<div class="flex justify-center p-10"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div></div>'; // Loading state
+                    
+                    try {
+                        const html = await Views[viewName](params);
+                        main.innerHTML = html;
+                        window.scrollTo(0, 0);
+                    } catch (err) {
+                        console.error(err);
+                        main.innerHTML = `<div class="p-4 text-red-500">Ett fel uppstod: ${err.message}</div>`;
+                    }
+                },
+                refresh: () => {
+                    app.router.go(app.state.currentView, app.state.params);
+                }
+            },
+            modals: Modals
+        };
+
+        // --- 7. INIT ---
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await db.connect();
+                
+                // Handle Online/Offline status
+                window.addEventListener('offline', () => {
+                    const status = document.getElementById('connection-status');
+                    status.innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-400"></span> Offline';
+                    status.classList.add('text-slate-400');
+                });
+                window.addEventListener('online', () => {
+                     const status = document.getElementById('connection-status');
+                    status.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500"></span> Online';
+                });
+
+                // Seed demo data if empty
+                const projects = await db.getAll('projects');
+                if(projects.length === 0) {
+                    // Demo Project
+                    const demoId = Utils.id();
+                    await db.add('projects', {
+                        id: demoId,
+                        name: 'Exempel: MagCase',
+                        description: 'Ett skal för telefoner som laddar trådlöst.',
+                        businessModel: 'dropshipping',
+                        stage: 'research',
+                        createdAt: Utils.now()
+                    });
+                    await db.add('tasks', {
+                        id: Utils.id(),
+                        projectId: demoId,
+                        title: 'Undersök konkurrenter',
+                        status: 'done',
+                        priority: 'high',
+                        createdAt: Utils.now()
+                    });
+                    await db.add('tasks', {
+                        id: Utils.id(),
+                        projectId: demoId,
+                        title: 'Hitta leverantörer i Kina',
+                        status: 'todo',
+                        priority: 'high',
+                        createdAt: Utils.now()
+                    });
+                }
+
+                // Start App
+                app.router.go('dashboard');
+
+            } catch (err) {
+                document.getElementById('main-content').innerHTML = `
+                    <div class="p-8 text-center text-red-500">
+                        <h2 class="font-bold text-xl mb-2">Kunde inte starta appen</h2>
+                        <p>Din webbläsare kanske inte stöder IndexedDB.</p>
+                        <p class="text-sm mt-4 opacity-75">${err.message}</p>
+                    </div>
+                `;
+            }
+        });
+
+    </script>
+</body>
+</html>
